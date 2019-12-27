@@ -22,10 +22,8 @@ for i in range(num_layers):
 
 print(f'layers: {layers}')
 
-# output = [ [-1]*n for i in range(num_layers)]
-# output = [x[:] for x in [[-1] * n] * num_layers]
 output = [-1]*n
-# import pdb; pdb.set_trace();
+
 print(f'layers: {layers}')
 print(f'output: {output}')
 for i in range(n):
