@@ -1,12 +1,8 @@
 grid = []
-
-
-with open('exampleinput.txt', 'r') as f:
+with open('input.txt', 'r') as f:
     for line in f:
       line = line.strip()
       grid.append(line)
-
-# print(grid)
 
 NROWS = len(grid)
 NCOLS = len(grid[0])
