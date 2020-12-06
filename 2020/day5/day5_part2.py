@@ -19,7 +19,7 @@ def pass_to_seat_id(bpass):
 
 seat_ids = [pass_to_seat_id(bpass) for bpass in passes]
 
-# print(max(seat_ids))
+# print(max(seat_ids)) # part 1 answer
 
 seat_ids = sorted(seat_ids)
 last_seat = None
