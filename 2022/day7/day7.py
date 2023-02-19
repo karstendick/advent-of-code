@@ -1,7 +1,7 @@
 from treelib import Node, Tree
 
 inp = []
-with open('example.txt', 'r') as f:
+with open('input.txt', 'r') as f:
   for line in f:
     inp.append(line.strip())
 
@@ -14,7 +14,7 @@ class Inode():
 
 root = Tree()
 root.show()
-pwd = root.create_node("/", "/", data=Inode(0, 'dir')) # root node
+pwd = root.create_node("/", data=Inode(0, 'dir')) # root node
 
 # TODO:
 # This approach of using the file/dir name for the treelib identifier
@@ -37,16 +37,14 @@ for line in inp[1:]:
       pwd = root.parent(pwd.identifier)
     else:
       print(f"cd to {dir}")
-      # pwd = root.create_node(dir, dir, data=Inode(0, 'dir'), parent=pwd.identifier)
-      pwd = root.get_node(dir)
+      pwd = [n for n in root.children(pwd.identifier) if n.tag == dir][0]
   elif mode == 'ls':
     size, name = line.split()
     if size == 'dir':
-      
-      node = root.create_node(name, name, data=Inode(0, 'dir'), parent=pwd.identifier)
+      node = root.create_node(name, data=Inode(0, 'dir'), parent=pwd.identifier)
       print(f"Adding dir {name} with identifer {node.identifier}")
     else:
       print(f"Adding file {name} with size {int(size)} in directory {pwd.identifier}")
-      root.create_node(name, name, data=Inode(int(size), 'file'), parent=pwd.identifier)
+      root.create_node(name, data=Inode(int(size), 'file'), parent=pwd.identifier)
 
 root.show()
