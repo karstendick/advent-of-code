@@ -1,5 +1,5 @@
 inp = []
-with open('example.txt', 'r') as f:
+with open('input.txt', 'r') as f:
   for line in f:
     inp.append(line.strip())
 
@@ -11,36 +11,48 @@ print(grid)
 NROWS = len(grid)
 NCOLS = len(grid[0])
 
-def is_visible(r, c):
+def get_trees_seen(this_tree, trees):
+  if not trees:
+    return 0
+  trees_seen = 0
+  for tree in trees:
+    trees_seen += 1
+    if tree >= this_tree:
+      break
+  return trees_seen
+
+def get_scenic_score(r, c):
   this_tree = grid[r][c]
   if r == 0 or c == 0 or r == NROWS-1 or c == NCOLS-1:
-    return True
+    return 0
   # from the left
-  others = grid[r][:c]
-  if this_tree > max(others):
-    return True
+  from_left = grid[r][:c]
+  from_left = from_left[::-1]
   # from the right
-  others = grid[r][c+1:]
-  if this_tree > max(others):
-    return True
+  from_right = grid[r][c+1:]
   # from above
-  others = [grid[row][c] for row in range(0,r)]
-  if this_tree > max(others):
-    return True
+  from_above = [grid[row][c] for row in range(0,r)[::-1]]
   # from below
-  others = [grid[row][c] for row in range(r+1,NROWS)]
-  if this_tree > max(others):
-    return True
-  return False
+  from_below = [grid[row][c] for row in range(r+1,NROWS)]
 
-num_visible = 0
+  # print(f"from_left: {from_left}")
+  # print(f"from_right: {from_right}")
+  # print(f"from_above: {from_above}")
+  # print(f"from_below: {from_below}")
+
+  return get_trees_seen(this_tree, from_left) * \
+         get_trees_seen(this_tree, from_right) * \
+         get_trees_seen(this_tree, from_above) * \
+         get_trees_seen(this_tree, from_below)
+
+highest_score = 0
 for r in range(NROWS):
   for c in range(NCOLS):
-    if is_visible(r,c):
-      num_visible += 1
-      # print(f"[{r},{c}] is visible")
-    else:
-      pass
-      # print(f"[{r},{c}] is NOT visible")
+    score = get_scenic_score(r,c)
+    if score > highest_score:
+      highest_score = score
 
-print(num_visible)
+print(highest_score)
+
+# print(f"should be 4: {get_scenic_score(1, 2)}")
+# print(f"should be 8: {get_scenic_score(3, 2)}")
