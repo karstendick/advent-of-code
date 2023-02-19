@@ -12,16 +12,11 @@ class Inode():
     self.size = size
     self.type = type
 
-root = Tree()
-root.show()
-pwd = root.create_node("/", data=Inode(0, 'dir')) # root node
+tree = Tree()
+tree.show()
+root = tree.create_node("/", data=Inode(0, 'dir')) # root node
 
-# TODO:
-# This approach of using the file/dir name for the treelib identifier
-# does not work on the input, as the same file name can be used in different directories,
-# i.e. relative path names are not unique.
-# Global path names are unique, but it'll take some work to construct them and keep track of them :-(
-
+pwd = root
 mode = None
 for line in inp[1:]:
   if line == '$ ls':
@@ -34,17 +29,34 @@ for line in inp[1:]:
     dir = line.split()[2]
     if dir == '..':
       print("cd up a directory")
-      pwd = root.parent(pwd.identifier)
+      pwd = tree.parent(pwd.identifier)
     else:
       print(f"cd to {dir}")
-      pwd = [n for n in root.children(pwd.identifier) if n.tag == dir][0]
+      pwd = [n for n in tree.children(pwd.identifier) if n.tag == dir][0]
   elif mode == 'ls':
     size, name = line.split()
     if size == 'dir':
-      node = root.create_node(name, data=Inode(0, 'dir'), parent=pwd.identifier)
+      node = tree.create_node(name, data=Inode(0, 'dir'), parent=pwd.identifier)
       print(f"Adding dir {name} with identifer {node.identifier}")
     else:
       print(f"Adding file {name} with size {int(size)} in directory {pwd.identifier}")
-      root.create_node(name, data=Inode(int(size), 'file'), parent=pwd.identifier)
+      tree.create_node(name, data=Inode(int(size), 'file'), parent=pwd.identifier)
 
-root.show()
+tree.show()
+
+def calc_dir_sizes(root):
+  if root.data.type == 'dir':
+    total_size = sum(map(lambda n: calc_dir_sizes(n), tree.children(root.identifier)))
+    root.data.size = total_size
+    return total_size
+  else:
+    return root.data.size
+
+calc_dir_sizes(root)
+
+tree.show(data_property="size")
+
+# nodes = map(lambda nid: tree., tree.expand_tree())
+nodes = tree.all_nodes()
+dirs_under100k = [n for n in nodes if n.data.type == 'dir' and n.data.size <= 100000]
+print(sum(map(lambda n: n.data.size, dirs_under100k)))
