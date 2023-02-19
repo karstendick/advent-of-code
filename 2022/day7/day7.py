@@ -1,7 +1,7 @@
 from treelib import Node, Tree
 
 inp = []
-with open('input.txt', 'r') as f:
+with open('example.txt', 'r') as f:
   for line in f:
     inp.append(line.strip())
 
@@ -56,7 +56,6 @@ calc_dir_sizes(root)
 
 tree.show(data_property="size")
 
-# nodes = map(lambda nid: tree., tree.expand_tree())
 nodes = tree.all_nodes()
 dirs_under100k = [n for n in nodes if n.data.type == 'dir' and n.data.size <= 100000]
 print(sum(map(lambda n: n.data.size, dirs_under100k)))
