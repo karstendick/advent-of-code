@@ -39,8 +39,20 @@ for inst in instructions:
 cycle_to_X[cycle+1] = X
 # print(cycle_to_X)
 
-sum = 0
-for cyclei in [20,60,100,140,180,220]:
-  sum += cycle_to_X[cyclei] * cyclei
+crt = ['.' for i in range(245)]
+for cycle in range(1,241):
+  X = cycle_to_X[cycle]
+  pixel_pos = (cycle-1)
+  if (pixel_pos % 40) in [X-1, X, X+1]:
+    # print(f'In cycle {cycle}, drawing pixel # in position {cycle-1} with X={X} & sprite=[{X-1}, {X}, {X+1}]')
+    crt[pixel_pos] = '#'
+  else:
+    # print(f'In cycle {cycle}, drawing pixel . in position {cycle-1} with X={X} & sprite=[{X-1}, {X}, {X+1}]')
+    pass
 
-print(f'sum: {sum}')
+print(''.join(crt[0:40]))
+print(''.join(crt[40:80]))
+print(''.join(crt[80:120]))
+print(''.join(crt[120:160]))
+print(''.join(crt[160:200]))
+print(''.join(crt[200:240]))
