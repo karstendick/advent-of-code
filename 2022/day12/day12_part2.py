@@ -55,12 +55,4 @@ for row in range(len(elevation_map)):
 G = nx.DiGraph()
 G.add_weighted_edges_from(edges)
 
-path_lengths = []
-for start in starts:
-  try:
-    path_lengths.append(nx.dijkstra_path_length(G, start, end))
-  except nx.NetworkXNoPath:
-    pass
-
-min_length = min(path_lengths)
-print(min_length)
+print(nx.multi_source_dijkstra(G, starts, end)[0])
