@@ -14,6 +14,7 @@ for line in inp:
 
 
 num_tuples = []
+gear_tuples = []
 
 for r, line in enumerate(inp):
   num_str = ''
@@ -26,6 +27,8 @@ for r, line in enumerate(inp):
       if cstart is None:
         cstart = c
     else:
+      if num_str == '*':
+        gear_tuples.append((r, c))
       if num_str != '':
         num = int(num_str)
         cend = c - 1
