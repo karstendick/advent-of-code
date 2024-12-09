@@ -30,11 +30,13 @@ def get_ordered_update(update):
   graph = {key: {val for val in before_to_after[key] if val in update}
            for key in before_to_after if key in update}
   # print(graph)
+
+  # Kahn's algorithm for topological sorting
   indegree = defaultdict(int)
   for node in graph:
     for neighbor in graph[node]:
       indegree[neighbor] += 1
-  
+
   queue = deque([node for node in graph if indegree[node] == 0])
   sorted_order = []
 
