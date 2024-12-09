@@ -14,9 +14,6 @@ with open('input.txt', 'r') as f:
       update = [int(x) for x in line.split(',')]
       updates.append(update)
 
-# print(before_to_after)
-# print(after_to_before)
-# print(updates)
 
 def is_ordered(update):
   for i, page in enumerate(update):
