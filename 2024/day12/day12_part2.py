@@ -47,18 +47,45 @@ def get_region(rc):
       queue.extend(unvisited_neighbors)
   return region
 
-def calc_perimeter(region):
-  perimeter = 0
-  for rc in region:
-    plant = get_plant(rc)
-    neighbors = get_neighbors(rc)
-    # Boundary adds to perimeter
-    perimeter += 4 - len(neighbors)
-    for n in neighbors:
-      if get_plant(n) != plant:
-        # Other plant plots add to perimeter
-        perimeter += 1
-  return perimeter
+
+def calc_edges(region):
+  edges = 0
+  for (r, c) in region:
+    north_n = (r - 1, c) # TODO: Add const NORTH vector of (-1, 0)
+    west_n = (r, c - 1)
+    nw_n = (r - 1, c - 1)
+    # TODO: Do this once, rotate 90 degrees and do it in a loop
+    if (north_n not in region):
+      # Top is an edge. But is it a new edge?
+      # it's the same edge if the spot west of plot is in_bounds
+      # and the NW plot is not the same plant (or is out of bounds)
+      same_edge = (west_n in region) and (nw_n not in region)
+      if not same_edge:
+        edges += 1
+
+    south_n = (r + 1, c)
+    sw_n = (r + 1, c - 1)
+    if south_n not in region:
+      # bottom is an edge
+      same_edge = (west_n in region) and (sw_n not in region)
+      if not same_edge:
+        edges += 1
+
+    if west_n not in region:
+      # left is an edge
+      same_edge = (north_n in region) and (nw_n not in region)
+      if not same_edge:
+        edges += 1
+
+    east_n = (r, c + 1)
+    ne_n = (r - 1, c + 1)
+    if east_n not in region:
+      # right is an edge
+      same_edge = (north_n in region) and (ne_n not in region)
+      if not same_edge:
+        edges += 1
+  return edges
+
 
 regions = []
 visited = set()
@@ -76,9 +103,9 @@ total_price = 0
 for region in regions:
   plant = get_plant(next(iter(region)))
   area = len(region)
-  perimeter = calc_perimeter(region)
-  price = area * perimeter
+  edges = calc_edges(region)
+  price = area * edges
   total_price += price
-  # print(f'{plant} (area: {area}, perimeter: {perimeter}): {region}')
+  # print(f'{plant} (area: {area}, edges: {edges}): {region}')
 
 print(total_price)
