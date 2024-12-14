@@ -1,10 +1,11 @@
 from math import floor, log10
 from functools import cache
+from collections import Counter
 
-stones = []
-with open('example.txt', 'r') as f:
+inp = []
+with open('input.txt', 'r') as f:
   for line in f:
-    stones.extend([int(x) for x in line.split()])
+    inp.extend([int(x) for x in line.split()])
 
 # print(stones)
 
@@ -32,35 +33,17 @@ def get_new_vals(stone_val):
    return [stone_val * 2024]
 
 
-@cache
 def blink_once(stones):
-  new_stones = []
-  for stone in stones:
-    new_vals = get_new_vals(stone)
-    new_stones.extend(new_vals)
-  return tuple(new_stones)
-
-@cache
-def blink_n_times(stones, n):
-  for i in range(n):
-    print(f'Blink #{i+1}: {len(stones)} stones')
-    stones = blink_once(stones)
-  return stones
-
-@cache
-def stone_len(stone, blink_times):
-  stones = tuple([stone])
-  stones = blink_n_times(stones, blink_times)
-  return len(stones)
+  new_stones = Counter()
+  for stone, count in stones.items():
+    for new_stone in get_new_vals(stone):
+      new_stones[new_stone] += count
+  return new_stones
 
 
-blink_times = 6
-total = 0
-n = len(stones)
-stones = tuple(stones)
-for i, stone in enumerate(stones):
-  l = stone_len(stone, blink_times)
-  print(f'Stone #{i} becomes {l} stones')
-  total += l
+blink_times = 75
+stones = Counter(inp)
+for i in range(1, blink_times + 1):
+  stones = blink_once(stones)
 
-print(total)
+print(sum(stones.values()))
