@@ -2,7 +2,7 @@ from collections import defaultdict, deque
 import heapq
 
 inp = []
-with open("example_mod.txt", "r") as f:
+with open("input.txt", "r") as f:
     for line in f:
         inp.append(line.strip())
 
@@ -16,8 +16,15 @@ def find_index_2d(array, value):
     return None
 
 
-start = find_index_2d(inp, "S")
-end = find_index_2d(inp, "E")
+# start = find_index_2d(inp, "S")
+# end = find_index_2d(inp, "E")
+# For input.txt:
+start = (139, 1, 3)
+end = (1, 139, 0)
+# For example.txt:
+# start = (13, 1, 1)
+# end = (1, 13, 0)
+
 
 print(start, end)
 
@@ -51,33 +58,50 @@ def get_neighbor_dist_dir_tuples(node, dir):
     return neighbors
 
 
-east = (0, 1)
+# east = (0, 1)
+# directions = [(-1, 0), (0, 1), (1, 0), (0, -1)] # NESW
+# east = directions[1]
+directions = [(-1, 0), (0, -1), (1, 0), (0, 1)]
 
 
 def build_graph(start):
-    graph = defaultdict(dict)  # {(0, 1): {(1, 1): 42, ...}, ...}
-    visited = set()  # {(0, 0), (0, 1), ...}
-    queue = deque([(start, east)])
-    while queue:
-        node, dir = queue.popleft()
-        if node not in visited:
-            visited.add(node)
+    graph = dict()
+    for r, row in enumerate(inp):
+        for c, e in enumerate(row):
+            if e != '#':
+                for z in range(4):
+                    graph[(r, c, z)] = {}
 
-            neighbor_dist_dir_tuples = get_neighbor_dist_dir_tuples(node, dir)
-            unvisited_neighbor_dist_dir_tuples = [
-                (n, ndist, ndir)
-                for (n, ndist, ndir) in neighbor_dist_dir_tuples
-                if n not in visited
-            ]
-            for n, ndist, ndir in unvisited_neighbor_dist_dir_tuples:
-                graph[node][n] = ndist
-                if n not in graph:
-                    graph[n] = dict()
-            unvisited_neighbor_dir_pairs = [
-                (n, ndir) for (n, ndist, ndir) in unvisited_neighbor_dist_dir_tuples
-            ]
-            queue.extend(unvisited_neighbor_dir_pairs)
-    graph[end] = {}
+    for r, c, z in graph.keys():
+        dr, dc = directions[z]
+        targetr, targetc = r + dr, c + dc
+        if (targetr, targetc, z) in graph:
+            graph[(r, c, z)][(targetr, targetc, z)] = 1
+        for i in range(4):
+            graph[(r, c, z)][(r, c, i)] = 1000
+            
+    # visited = set()  # {(0, 0), (0, 1), ...}
+    # queue = deque([(start, east)])
+    # while queue:
+    #     node, dir = queue.popleft()
+    #     if node not in visited:
+    #         visited.add(node)
+
+    #         neighbor_dist_dir_tuples = get_neighbor_dist_dir_tuples(node, dir)
+    #         unvisited_neighbor_dist_dir_tuples = [
+    #             (n, ndist, ndir)
+    #             for (n, ndist, ndir) in neighbor_dist_dir_tuples
+    #             if n not in visited
+    #         ]
+    #         for n, ndist, ndir in unvisited_neighbor_dist_dir_tuples:
+    #             graph[node][n] = ndist
+    #             if n not in graph:
+    #                 graph[n] = dict()
+    #         unvisited_neighbor_dir_pairs = [
+    #             (n, ndir) for (n, ndist, ndir) in unvisited_neighbor_dist_dir_tuples
+    #         ]
+    #         queue.extend(unvisited_neighbor_dir_pairs)
+    # graph[end] = {}
     return graph
 
 
