@@ -14,11 +14,11 @@ with open("input.txt", "r") as f:
 
 print(f"A, B, C: ({A}, {B}, {C})")
 print(program)
-initB = B
-initC = C
+
 
 def starts_with(array, prefix):
-    return array[:len(prefix)] == prefix
+    return array[: len(prefix)] == prefix
+
 
 def get_combo_operand(op):
     if op == 4:
@@ -40,30 +40,22 @@ def get_combo_operand(op):
 adv, bxl, bst, jnz, bxc, out, bdv, cdv = range(8)
 program_len = len(program)
 
-A = z3.BitVec('A', 64)
+A = z3.BitVec("A", 64)
 constraints = []
-# for initA in range(1, 2):
+constraints.append(A > 0)
+constraints.append(A < 202975183645229)
+# constraints.append(A < 202975183645226)
 try:
     outputs = []
+    outputs_len = 0
     ip = 0
-    # A = initA
-    B = initB
-    C = initC
-    i = 0
-    while ip < program_len - 1:  # Need 2 values to read
-        i += 1
-        # if i > 10**6:
-        #     print(f'Too many loops!')
-        #     break
+    while ip < program_len - 1 and outputs_len < len(program):  # Need 2 values to read
         opcode = program[ip]
         operand = program[ip + 1]
         if opcode == adv:
             # division stored to A
             combo_op = get_combo_operand(operand)
             numerator = A
-            # denominator = 2**combo_op
-            # denominator = 1 << combo_op
-            # result = numerator // denominator
             result = numerator >> combo_op
             A = result
         elif opcode == bxl:
@@ -73,7 +65,6 @@ try:
         elif opcode == bst:
             # store combo operand to B
             combo_op = get_combo_operand(operand)
-            # result = combo_op % 8
             result = combo_op & 0x07
             B = result
         elif opcode == jnz:
@@ -88,56 +79,33 @@ try:
         elif opcode == out:
             # output
             combo_op = get_combo_operand(operand)
-            # result = combo_op % 8
             result = combo_op & 0x07
             constraints.append(result == program[len(outputs)])
             outputs.append(result)
-            # constraints.append(program[:len(outputs)] == outputs)
-            # array[:len(prefix)] == prefix
-            # if not starts_with(program, outputs):
-            #     print(f'outputs: {outputs}; program: {program}')
-            #     raise Exception('Non-matching output.')
+            outputs_len += 1
         elif opcode == bdv:
             # division stored to B
             combo_op = get_combo_operand(operand)
             numerator = A
-            # denominator = 2**combo_op
-            # denominator = 1 << combo_op
-            # result = numerator // denominator
             result = numerator >> combo_op
             B = result
         elif opcode == cdv:
             # division stored to C
             combo_op = get_combo_operand(operand)
             numerator = A
-            # denominator = 2**combo_op
-            # denominator = 1 << combo_op
-            # result = numerator // denominator
             result = numerator >> combo_op
             C = result
         else:
             raise Exception(f"Unexpected opcode: {opcode}")
         ip += 2
 except Exception as e:
-    print(f'Swallowing exception: {e}.')
-if outputs == program:
-    print(f'FOUND IT!!')
-            
-
-# print(f"A, B, C: ({A}, {B}, {C})")
-# print(outputs)
-# print(",".join(str(x) for x in outputs))
-
-# x = Int('x')
-# y = Int('y')
-# solve(x > 2, y < 10, x + 2*y == 7)
-
-# x = Real('x')
-# y = Real('y')
-# solve(x**2 + y**2 > 3, x**3 + y < 5)
+    print(f"Swallowing exception: {e}.")
 
 constraints.append(A == 0)
-z3.solve(*constraints)
-
-# 1557573509065258 is too high
-#  488848206866991 is too high
+solver = z3.Solver()
+solver.add(*constraints)
+if solver.check() == z3.sat:
+    result = solver.model().evaluate(A)
+    print(result)
+    print(solver.model())
+    solver.add(A < result)
