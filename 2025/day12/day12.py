@@ -136,6 +136,12 @@ def get_next_assignment_for_shape(grid, num_rows, num_cols, shape_index, transfo
                 if is_valid_position(grid, num_rows, num_cols, transformed_shape, r, c):
                     yield (shape_index, transformed_shape_index, (r, c))
 
+def is_shape_index_min_valid(shape_counts, shape_index_min):
+    for shape_index in range(0, shape_index_min):
+        if shape_counts[shape_index] > 0:
+            return False
+    return True
+
 def backtrack_search(region):
     (num_rows, num_cols), shape_counts = region
     shape_counts = list(shape_counts)
@@ -144,10 +150,15 @@ def backtrack_search(region):
     return backtrack(grid, num_rows, num_cols, shape_counts, 0, 0, 0, 0, assignment)
 
 def backtrack(grid, num_rows, num_cols, shape_counts, shape_index_min, transformed_shape_index_min, r_min, c_min, assignment):
+    # print(f"shape_counts: {shape_counts}, shape_index_min: {shape_index_min}, transformed_shape_index_min: {transformed_shape_index_min}, r_min: {r_min}, c_min: {c_min}")
     if is_complete(shape_counts):
         return assignment
     for next_assignment in get_next_assignments(grid, num_rows, num_cols, shape_counts, shape_index_min, transformed_shape_index_min, r_min, c_min):
+        # if next_assignment is None:
+        #     return None
         shape_index, transformed_shape_index, (r, c) = next_assignment
+        # if not is_shape_index_min_valid(shape_counts, shape_index):
+        #     return None
         transformed_shape = all_transformed_shapes[shape_index][transformed_shape_index]
         assign(grid, transformed_shape, r, c, True)
         shape_counts[shape_index] -= 1
@@ -161,13 +172,12 @@ def backtrack(grid, num_rows, num_cols, shape_counts, shape_index_min, transform
         assignment.pop()
     return None
 
-for region in regions:
+total = 0
+for i, region in enumerate(regions):
     assignment = backtrack_search(region)
-    print(f"region: {region}")
-    print(f"assignment: {assignment}")
+    print(f"region #{i}: {region}")
+    print(f"assignment #{i}: {assignment}")
     print()
-
-
-
-
-
+    if assignment is not None:
+        total += 1
+print(total)
