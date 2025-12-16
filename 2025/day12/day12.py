@@ -1,5 +1,3 @@
-from collections import deque
-
 def parse_region(line):
     cxr_str, indexes_str = line.split(":")
     c, r = [int(n) for n in cxr_str.split("x")]
@@ -54,7 +52,7 @@ def get_transformed_shapes(shape):
 
 shapes = []
 regions = []
-with open("example.txt", "r") as f:
+with open("input.txt", "r") as f:
     shape_strs = []
     for line in f:
         line = line.strip()
@@ -87,27 +85,6 @@ all_transformed_shapes = tuple(all_transformed_shapes)
 
 # print(all_transformed_shapes)
 
-# csp
-# grid (list of lists of booleans)
-# grid[r][c] = False if empty, True if shape
-# regions is tuples of (num_rows, num_cols, list of shape indices)
-# Inputs include:
-# num_rows, num_cols
-# list of shape counts -- When this is all zeroes, the problem is solved
-# current shape index
-# current transformed shape index
-
-# assignment
-# deque of tuples (shape_index, transformed_shape_index, (r, c))
-# each tuple represents a shape being placed in a region
-# the shape is represented by its index in `shapes`
-# the transformed shape is represented by its index in the transformed shapes tuple
-# the position is represented by a tuple (r, c)
-# the position is the top left corner of the transformed shape in the region
-
-def is_complete(shape_counts):
-    return all(count == 0 for count in shape_counts)
-
 def is_valid_position(grid, num_rows, num_cols, transformed_shape, r, c):
     for (tr, tc) in transformed_shape:
         if not (0 <= r + tr < num_rows) or not (0 <= c + tc < num_cols):
@@ -120,64 +97,69 @@ def assign(grid, transformed_shape, r, c, value):
     for (tr, tc) in transformed_shape:
         grid[r + tr][c + tc] = value
 
-def get_next_assignments(grid, num_rows, num_cols, shape_counts, shape_index_min, transformed_shape_index_min, r_min, c_min):
-    if shape_counts[shape_index_min] > 0:
-        yield from get_next_assignment_for_shape(grid, num_rows, num_cols, shape_index_min, transformed_shape_index_min, r_min, c_min)
-    for shape_index in range(shape_index_min + 1, len(shapes)):
-        if shape_counts[shape_index] > 0:
-            yield from get_next_assignment_for_shape(grid, num_rows, num_cols, shape_index, 0, 0, 0)
-    return None
-
-def get_next_assignment_for_shape(grid, num_rows, num_cols, shape_index, transformed_shape_index_min, r_min, c_min):
-    for transformed_shape_index in range(transformed_shape_index_min, len(all_transformed_shapes[shape_index])):
-        transformed_shape = all_transformed_shapes[shape_index][transformed_shape_index]
-        for r in range(r_min, num_rows):
-            for c in range(c_min + 1, num_cols):
+def has_valid_position(grid, num_rows, num_cols, shape_index):
+    """Check if shape_index has at least one valid position on the grid."""
+    for transformed_shape in all_transformed_shapes[shape_index]:
+        for r in range(num_rows):
+            for c in range(num_cols):
                 if is_valid_position(grid, num_rows, num_cols, transformed_shape, r, c):
-                    yield (shape_index, transformed_shape_index, (r, c))
+                    return True
+    return False
 
-def is_shape_index_min_valid(shape_counts, shape_index_min):
-    for shape_index in range(0, shape_index_min):
-        if shape_counts[shape_index] > 0:
-            return False
+# This approach was too slow.
+def forward_check(grid, num_rows, num_cols, shape_counts):
+    """Check that all remaining shapes have at least one valid position."""
+    for shape_idx, count in enumerate(shape_counts):
+        if count > 0:
+            if not has_valid_position(grid, num_rows, num_cols, shape_idx):
+                return False
     return True
 
 def backtrack_search(region):
     (num_rows, num_cols), shape_counts = region
-    shape_counts = list(shape_counts)
-    grid = [[False] * num_cols for _ in range(num_rows)]
-    assignment = deque()
-    return backtrack(grid, num_rows, num_cols, shape_counts, 0, 0, 0, 0, assignment)
 
-def backtrack(grid, num_rows, num_cols, shape_counts, shape_index_min, transformed_shape_index_min, r_min, c_min, assignment):
-    # print(f"shape_counts: {shape_counts}, shape_index_min: {shape_index_min}, transformed_shape_index_min: {transformed_shape_index_min}, r_min: {r_min}, c_min: {c_min}")
-    if is_complete(shape_counts):
-        return assignment
-    for next_assignment in get_next_assignments(grid, num_rows, num_cols, shape_counts, shape_index_min, transformed_shape_index_min, r_min, c_min):
-        # if next_assignment is None:
-        #     return None
-        shape_index, transformed_shape_index, (r, c) = next_assignment
-        # if not is_shape_index_min_valid(shape_counts, shape_index):
-        #     return None
-        transformed_shape = all_transformed_shapes[shape_index][transformed_shape_index]
-        assign(grid, transformed_shape, r, c, True)
-        shape_counts[shape_index] -= 1
-        assignment.append((shape_index, transformed_shape_index, (r, c)))
-        result = backtrack(grid, num_rows, num_cols, shape_counts, shape_index, transformed_shape_index, r, c, assignment)
-        if result is not None:
-            return result
-        # backtrack!
-        assign(grid, transformed_shape, r, c, False)
-        shape_counts[shape_index] += 1
-        assignment.pop()
-    return None
+    # Quick area check: if shapes need more cells than grid has, impossible
+    shape_size = len(shapes[0])  # all shapes have same size
+    total_shape_cells = sum(shape_counts) * shape_size
+    grid_area = num_rows * num_cols
+    if total_shape_cells > grid_area:
+        return False
+
+    grid = [[False] * num_cols for _ in range(num_rows)]
+    shape_counts = list(shape_counts)
+    return backtrack(grid, num_rows, num_cols, shape_counts)
+
+def backtrack(grid, num_rows, num_cols, shape_counts):
+    if all(c == 0 for c in shape_counts):
+        return True  # All shapes placed successfully
+
+    # Find the first shape type we still need to place
+    shape_index = None
+    for i, count in enumerate(shape_counts):
+        if count > 0:
+            shape_index = i
+            break
+
+    # Try all transformed versions of this shape
+    for transformed_shape in all_transformed_shapes[shape_index]:
+        for r in range(num_rows):
+            for c in range(num_cols):
+                if is_valid_position(grid, num_rows, num_cols, transformed_shape, r, c):
+                    assign(grid, transformed_shape, r, c, True)
+                    shape_counts[shape_index] -= 1
+
+                    if backtrack(grid, num_rows, num_cols, shape_counts):
+                        return True
+
+                    assign(grid, transformed_shape, r, c, False)
+                    shape_counts[shape_index] += 1
+
+    return False
 
 total = 0
 for i, region in enumerate(regions):
-    assignment = backtrack_search(region)
-    print(f"region #{i}: {region}")
-    print(f"assignment #{i}: {assignment}")
-    print()
-    if assignment is not None:
+    result = backtrack_search(region)
+    print(f"region #{i}: {region} -> {result}")
+    if result:
         total += 1
 print(total)
